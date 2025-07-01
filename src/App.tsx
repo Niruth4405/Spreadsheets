@@ -1,4 +1,3 @@
-import React from "react";
 import Navbar1 from "../src/components/Navbar1";
 import Navbar2 from "./components/Navbar2";
 import Table from '../src/components/Table'

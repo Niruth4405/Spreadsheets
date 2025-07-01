@@ -1,4 +1,3 @@
-import React from "react";
 import { TbLayoutSidebarRightFilled } from "react-icons/tb";
 import { BsThreeDots } from "react-icons/bs";
 import profile from "../assets/profile.jpeg";
