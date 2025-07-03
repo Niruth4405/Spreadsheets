@@ -5,7 +5,7 @@ type ModalProps = {
   onClose: () => void;
 };
 
-const Model: React.FC<ModalProps> = ({ onClose }) => {
+export const Model: React.FC<ModalProps> = ({ onClose }) => {
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,4 +31,4 @@ const Model: React.FC<ModalProps> = ({ onClose }) => {
   );
 };
 
-export default Model;
+

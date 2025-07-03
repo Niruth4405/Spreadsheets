@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {Sidebar} from "../components/Sidebar";
-import Model from "../components/model"; // ✅ Modal popup wrapper
+import { Sidebar } from "../components/Sidebar";
+import {Model} from "../components/Model";
 
 // Icons
 import { RiDownloadLine } from "react-icons/ri";
@@ -52,7 +52,7 @@ const Navbar2 = ({ isHidden, setIsHidden }: NavbarProps) => {
   return (
     <>
       <nav className="w-full py-1 px-5 flex justify-between items-center">
-        {/* Left toolbar */}
+       
         <div className="flex items-center space-x-4">
           <button
             onClick={toggleToolbar}
@@ -79,7 +79,6 @@ const Navbar2 = ({ isHidden, setIsHidden }: NavbarProps) => {
                   <span>{isHidden ? "Show fields" : "Hide fields"}</span>
                 </div>
 
-                {/* Sort */}
                 <div
                   onClick={() => setShowModal(true)}
                   className="flex items-center space-x-1 cursor-pointer text-gray-700 hover:text-black"
@@ -88,7 +87,6 @@ const Navbar2 = ({ isHidden, setIsHidden }: NavbarProps) => {
                   <span>Sort</span>
                 </div>
 
-                {/* Filter */}
                 <div
                   onClick={() => setShowModal(true)}
                   className="flex items-center space-x-1 cursor-pointer text-gray-700 hover:text-black"
@@ -97,7 +95,6 @@ const Navbar2 = ({ isHidden, setIsHidden }: NavbarProps) => {
                   <span>Filter</span>
                 </div>
 
-                {/* Cell View */}
                 <div
                   onClick={() => setShowModal(true)}
                   className="flex items-center space-x-1 cursor-pointer text-gray-700 hover:text-black"
@@ -110,9 +107,7 @@ const Navbar2 = ({ isHidden, setIsHidden }: NavbarProps) => {
           </AnimatePresence>
         </div>
 
-        {/* Right actions */}
         <div className="flex items-center gap-2">
-          {/* Import */}
           <button
             onClick={() => setShowModal(true)}
             className="rounded-md hover:bg-[#B3B3B3] py-2 px-2 flex justify-center items-center gap-1 border border-slate-300"
@@ -121,7 +116,6 @@ const Navbar2 = ({ isHidden, setIsHidden }: NavbarProps) => {
             Import
           </button>
 
-          {/* Export */}
           <button
             onClick={() => setShowModal(true)}
             className="rounded-md hover:bg-[#B3B3B3] py-2 px-2 flex justify-center items-center gap-1 border border-slate-300"
@@ -130,7 +124,6 @@ const Navbar2 = ({ isHidden, setIsHidden }: NavbarProps) => {
             Export
           </button>
 
-          {/* Share */}
           <button
             onClick={() => setShowModal(true)}
             className="rounded-md hover:bg-[#B3B3B3] py-2 px-2 flex justify-center items-center gap-1 border border-slate-300"
@@ -139,7 +132,6 @@ const Navbar2 = ({ isHidden, setIsHidden }: NavbarProps) => {
             Share
           </button>
 
-          {/* New Action */}
           <button
             onClick={toggleSidebar}
             className="bg-[#5D8363] py-2 px-6 flex justify-center items-center gap-1 text-white rounded-md"
@@ -150,7 +142,6 @@ const Navbar2 = ({ isHidden, setIsHidden }: NavbarProps) => {
         </div>
       </nav>
 
-      {/* Sidebar */}
       <AnimatePresence>
         {isSidebarOpen && (
           <motion.div
@@ -167,7 +158,6 @@ const Navbar2 = ({ isHidden, setIsHidden }: NavbarProps) => {
         )}
       </AnimatePresence>
 
-      {/* Modal */}
       {showModal && <Model onClose={() => setShowModal(false)} />}
     </>
   );
