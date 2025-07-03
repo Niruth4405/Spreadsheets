@@ -2,8 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sidebar } from "../components/Sidebar";
 import {Model} from "../components/Model";
-
-// Icons
 import { RiDownloadLine } from "react-icons/ri";
 import { TfiUpload } from "react-icons/tfi";
 import { FaRegShareFromSquare } from "react-icons/fa6";
@@ -14,7 +12,7 @@ import { FaFilter } from "react-icons/fa";
 import { TbLayoutGrid } from "react-icons/tb";
 import { HiOutlineChevronDoubleRight } from "react-icons/hi";
 
-// Props
+
 type NavbarProps = {
   isHidden: boolean;
   setIsHidden: (value: boolean) => void;
@@ -29,7 +27,7 @@ const Navbar2 = ({ isHidden, setIsHidden }: NavbarProps) => {
   const toggleToolbar = () => setIsOpen((prev) => !prev);
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
-  // Close sidebar on outside click
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (

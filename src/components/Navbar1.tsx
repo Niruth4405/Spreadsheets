@@ -3,8 +3,16 @@ import { BsThreeDots } from "react-icons/bs";
 import profile from "../assets/profile.jpeg";
 import { IoNotificationsSharp } from "react-icons/io5";
 import { CiSearch } from "react-icons/ci";
+import { Link } from "react-router-dom";
+
+
+
+const handleNotification = () =>{
+  alert("No New Notification!")
+}
 
 const Navbar1 = () => {
+  
   return (
     <nav className="w-full py-2 px-5 flex justify-between items-center">
       <div className="flex items-center gap-2">
@@ -24,19 +32,25 @@ const Navbar1 = () => {
           placeholder="Search within sheet"
           className="py-2 bg-slate-200 rounded-md outline-none px-6"
         />
-        <CiSearch className="absolute ml-1"/>
-        <IoNotificationsSharp size={25} className="text-[#5D8363] cursor-pointer" />
-        <div className="flex gap-2 items-center">
-          <img
-            src={profile}
-            alt="Profile photo"
-            className="w-[40px] h-[40px] rounded-full"
-          />
-          <div className="flex flex-col justify-start items-start cursor-pointer">
-            <h2 className="text-black">John Doe</h2>
-            <p className="text-[#B3B3B3]">John.doe...</p>
+        <CiSearch className="absolute ml-1" />
+        <IoNotificationsSharp
+          size={25}
+          className="text-[#5D8363] cursor-pointer"
+          onClick={handleNotification}
+        />
+        <Link to="/profile">
+          <div className="flex gap-2 items-center hover:border border-slate-300">
+            <img
+              src={profile}
+              alt="Profile photo"
+              className="w-[40px] h-[40px] rounded-full"
+            />
+            <div className="flex flex-col justify-start items-start cursor-pointer">
+              <h2 className="text-black">John Doe</h2>
+              <p className="text-[#B3B3B3]">John.doe...</p>
+            </div>
           </div>
-        </div>
+        </Link>
       </div>
     </nav>
   );

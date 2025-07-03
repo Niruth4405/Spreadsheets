@@ -1,17 +1,16 @@
-import Navbar1 from "../src/components/Navbar1";
-import Dashboard from "./components/Dasboard";
-// import Progress from "./components/Progress";
-
-
+import {Routes,Route} from "react-router-dom"
+import Files from "./components/Files"
+import Home from "./MainPage/Home"
+import Profile from "./components/Profile"
 
 const App = () => {
   return (
-  <div>
-    <Navbar1 />
-    <Dashboard />
-    
-  </div>
-  );
-};
+    <Routes>
+      <Route path='/' element={<Files/>}/>
+      <Route path='spreadsheet' element={<Home/>}/>
+      <Route path='profile' element={<Profile/>}/>
+    </Routes>
+  )
+}
 
-export default App;
+export default App
