@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { FaPlus } from "react-icons/fa";
+import { FaPlus, FaUser, FaLink, FaClipboard, FaCalendarAlt, FaRupeeSign, FaExclamation, FaUserEdit } from "react-icons/fa";
+import { MdOutlineTaskAlt } from "react-icons/md";
 
 type Row = {
   [key: string]: string;
@@ -9,7 +10,7 @@ const statusOptions = ["In-process", "Need to start", "Blocked", "Complete"];
 
 const statusColors: Record<string, string> = {
   "In-process": "bg-yellow-100 text-yellow-800",
-  "Need to start": "bg-orange-100 text-orange-800",
+  "Need to start": "bg-blue-100 text-blue-800",
   "Blocked": "bg-red-100 text-red-800",
   "Complete": "bg-green-100 text-green-800",
 };
@@ -44,6 +45,18 @@ const columnHeaders: Record<string, string> = {
   value: "Est. Value",
 };
 
+const icons: Record<string, JSX.Element> = {
+  job: <MdOutlineTaskAlt />,
+  submitted: <FaCalendarAlt />,
+  status: <FaClipboard />,
+  submitter: <FaUser />,
+  url: <FaLink />,
+  assigned: <FaUserEdit />,
+  priority: <FaExclamation />,
+  due: <FaCalendarAlt />,
+  value: <FaRupeeSign />,
+};
+
 const initialData: Row[] = [
   {
     job: "Launch social media campaign for pro...",
@@ -73,7 +86,7 @@ const Table: React.FC = () => {
   const [data, setData] = useState<Row[]>(initialData);
   const [columns, setColumns] = useState<string[]>(initialColumns);
   const [columnHeadersMap, setColumnHeadersMap] = useState(columnHeaders);
-  const [editingCell, setEditingCell] = useState<{ row: number; col: string } | null>(null);
+  const [selectedCell, setSelectedCell] = useState<{ row: number; col: string } | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; type: "row" | "col"; index: number } | null>(null);
   const tableRef = useRef<HTMLDivElement>(null);
   const [extraRows, setExtraRows] = useState<number>(0);
@@ -83,7 +96,7 @@ const Table: React.FC = () => {
       const rowHeight = 45;
       const viewportHeight = window.innerHeight;
       const tableTop = tableRef.current?.getBoundingClientRect().top || 0;
-      const visibleHeight = viewportHeight - tableTop - 40;
+      const visibleHeight = viewportHeight - tableTop - 100;
       const currentRows = data.length;
       const needed = Math.max(0, Math.floor(visibleHeight / rowHeight) - currentRows);
       setExtraRows(needed);
@@ -95,9 +108,7 @@ const Table: React.FC = () => {
   }, [data]);
 
   useEffect(() => {
-    const handleClickOutside = () => {
-      setContextMenu(null);
-    };
+    const handleClickOutside = () => setContextMenu(null);
     window.addEventListener("click", handleClickOutside);
     return () => window.removeEventListener("click", handleClickOutside);
   }, []);
@@ -108,18 +119,18 @@ const Table: React.FC = () => {
     setData(updated);
   };
 
+  const addRow = () => {
+    const newRow: Row = {};
+    columns.forEach((col) => (newRow[col] = ""));
+    setData([...data, newRow]);
+  };
+
   const addColumn = () => {
     const newKey = `column_${columns.length}`;
     const newLabel = `Column ${columns.length - initialColumns.length + 1}`;
     setColumns([...columns, newKey]);
     setColumnHeadersMap({ ...columnHeadersMap, [newKey]: newLabel });
     setData((prev) => prev.map((row) => ({ ...row, [newKey]: "" })));
-  };
-
-  const addRow = () => {
-    const newRow: Row = {};
-    columns.forEach((col) => (newRow[col] = ""));
-    setData([...data, newRow]);
   };
 
   const deleteRow = (index: number) => {
@@ -151,10 +162,27 @@ const Table: React.FC = () => {
   })];
 
   return (
-    <div ref={tableRef} className="p-4 w-full overflow-x-auto relative">
+    <div className="p-4 w-full overflow-x-auto relative" ref={tableRef}>
+      
+      {/* Formula Bar */}
+      <div className="flex items-center bg-gray-200 px-4 py-2 w-max min-w-full">
+        <div className="text-sm font-medium text-gray-700 mr-4">
+          {selectedCell ? `${String.fromCharCode(65 + columns.indexOf(selectedCell.col))}${selectedCell.row + 1}` : "—"}
+        </div>
+        <input
+          type="text"
+          value={
+            selectedCell ? data[selectedCell.row]?.[selectedCell.col] ?? "" : ""
+          }
+          readOnly
+          className="w-full bg-white px-3 py-1 rounded border text-sm shadow-inner"
+        />
+      </div>
+
       <table className="min-w-full border border-gray-300 table-fixed">
-        <thead className="bg-gray-50">
+        <thead>
           <tr>
+            <th className="w-[40px] bg-white" />
             {columns.map((colKey, i) => (
               <th
                 key={i}
@@ -162,45 +190,51 @@ const Table: React.FC = () => {
                   e.preventDefault();
                   setContextMenu({ x: e.clientX, y: e.clientY, type: "col", index: i });
                 }}
-                className="border border-gray-300 px-3 py-2 text-left font-semibold"
+                className="border border-gray-300 px-3 py-2 text-left font-semibold bg-gray-100"
               >
-                <input
-                  className="w-full bg-transparent outline-none font-semibold"
-                  value={columnHeadersMap[colKey]}
-                  onChange={(e) =>
-                    setColumnHeadersMap({ ...columnHeadersMap, [colKey]: e.target.value })
-                  }
-                />
+                <div className="flex items-center gap-2">
+                  {icons[colKey]}
+                  <input
+                    className="w-full bg-transparent outline-none font-semibold"
+                    value={columnHeadersMap[colKey]}
+                    onChange={(e) =>
+                      setColumnHeadersMap({ ...columnHeadersMap, [colKey]: e.target.value })
+                    }
+                  />
+                </div>
               </th>
             ))}
-            <th className="border border-gray-300 w-10 text-center">
+            <th className="border border-gray-300 w-10 text-center bg-white">
               <button onClick={addColumn} className="text-blue-600 hover:text-blue-800" title="Add column">
                 <FaPlus />
               </button>
             </th>
           </tr>
         </thead>
+
         <tbody>
           {allRows.map((row, rowIndex) => (
-            <tr
-              key={rowIndex}
-              className="bg-white hover:bg-gray-50"
-              onContextMenu={(e) => {
-                e.preventDefault();
-                if (rowIndex < data.length) {
-                  setContextMenu({ x: e.clientX, y: e.clientY, type: "row", index: rowIndex });
-                }
-              }}
-            >
+            <tr key={rowIndex} className="bg-white hover:bg-gray-50">
+              <td className="border border-gray-300 text-center text-sm font-medium bg-gray-50">
+                {rowIndex < data.length ? rowIndex + 1 : ""}
+              </td>
               {columns.map((colKey, colIndex) => {
                 const value = row[colKey] || "";
                 const isStatus = colKey === "status";
                 const isPriority = colKey === "priority";
                 const isURL = colKey === "url";
-                const isEditing = editingCell?.row === rowIndex && editingCell?.col === colKey;
 
                 return (
-                  <td key={colIndex} className="border border-gray-300 p-2 align-top">
+                  <td
+                    key={colIndex}
+                    onClick={() => rowIndex < data.length && setSelectedCell({ row: rowIndex, col: colKey })}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      if (rowIndex < data.length)
+                        setContextMenu({ x: e.clientX, y: e.clientY, type: "row", index: rowIndex });
+                    }}
+                    className="border border-gray-300 p-2 align-top"
+                  >
                     {isStatus ? (
                       <select
                         value={value}
@@ -214,29 +248,14 @@ const Table: React.FC = () => {
                         ))}
                       </select>
                     ) : isURL ? (
-                      isEditing ? (
-                        <textarea
-                          autoFocus
-                          value={value}
-                          onChange={(e) => handleChange(rowIndex, colKey, e.target.value)}
-                          onBlur={() => setEditingCell(null)}
-                          className="w-full resize-none outline-none bg-transparent text-sm text-blue-600 underline"
-                          rows={1}
-                        />
-                      ) : (
-                        <div
-                          onClick={() => setEditingCell({ row: rowIndex, col: colKey })}
-                          className="cursor-pointer text-blue-600 underline"
-                        >
-                          <a
-                            href={value.startsWith("http") ? value : `https://${value}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {value}
-                          </a>
-                        </div>
-                      )
+                      <a
+                        href={value.startsWith("http") ? value : `https://${value}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline text-sm"
+                      >
+                        {value}
+                      </a>
                     ) : (
                       <textarea
                         value={value}
@@ -258,10 +277,7 @@ const Table: React.FC = () => {
 
       {/* Add Row Button */}
       <div className="mt-4 flex justify-center">
-        <button
-          onClick={addRow}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
+        <button onClick={addRow} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
           + Add Row
         </button>
       </div>
