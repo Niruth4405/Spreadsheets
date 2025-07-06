@@ -11,12 +11,9 @@ import {
 } from "react-icons/fa";
 import { MdOutlineTaskAlt } from "react-icons/md";
 
-type Row = {
-  [key: string]: string;
-};
+type Row = { [key: string]: string };
 
 const statusOptions = ["In-process", "Need to start", "Blocked", "Complete"];
-
 const statusColors: Record<string, string> = {
   "In-process": "bg-yellow-100 text-yellow-800",
   "Need to start": "bg-blue-100 text-blue-800",
@@ -54,7 +51,6 @@ const columnHeaders: Record<string, string> = {
   value: "Est. Value",
 };
 
-// ✅ Fixed: Changed JSX.Element → React.ReactNode
 const icons: Record<string, React.ReactNode> = {
   job: <MdOutlineTaskAlt />,
   submitted: <FaCalendarAlt />,
@@ -94,47 +90,50 @@ const initialData: Row[] = [
 
 const Table: React.FC = () => {
   const [data, setData] = useState<Row[]>(initialData);
-  const [columns, setColumns] = useState<string[]>(initialColumns);
+  const [columns, setColumns] = useState(initialColumns);
   const [columnHeadersMap, setColumnHeadersMap] = useState(columnHeaders);
-  const [selectedCell, setSelectedCell] = useState<{
-    row: number;
-    col: string;
-  } | null>(null);
-  const [contextMenu, setContextMenu] = useState<{
-    x: number;
-    y: number;
-    type: "row" | "col";
-    index: number;
-  } | null>(null);
+  const [selectedCell, setSelectedCell] = useState<{ row: number; col: string } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; type: "row" | "col"; index: number } | null>(null);
+  const [extraRows, setExtraRows] = useState<Row[]>([]);
   const tableRef = useRef<HTMLDivElement>(null);
-  const [extraRows, setExtraRows] = useState<number>(0);
+
+  const calculateBlankRows = () => {
+    const rowHeight = 45;
+    const tableTop = tableRef.current?.getBoundingClientRect().top || 0;
+    const viewportHeight = window.innerHeight;
+    const visibleHeight = viewportHeight - tableTop - 160;
+    const requiredRows = Math.floor(visibleHeight / rowHeight);
+    const blankRows = Math.max(0, requiredRows - data.length);
+    const blanks: Row[] = Array(blankRows)
+      .fill({})
+      .map(() => {
+        const emptyRow: Row = {};
+        columns.forEach((col) => (emptyRow[col] = ""));
+        return emptyRow;
+      });
+    setExtraRows(blanks);
+  };
 
   useEffect(() => {
-    const calculateBlankRows = () => {
-      const rowHeight = 45;
-      const viewportHeight = window.innerHeight;
-      const tableTop = tableRef.current?.getBoundingClientRect().top || 0;
-      const visibleHeight = viewportHeight - tableTop - 100;
-      const currentRows = data.length;
-      const needed = Math.max(
-        0,
-        Math.floor(visibleHeight / rowHeight) - currentRows
-      );
-      setExtraRows(needed);
-    };
-
     calculateBlankRows();
     window.addEventListener("resize", calculateBlankRows);
     return () => window.removeEventListener("resize", calculateBlankRows);
   }, [data]);
 
   useEffect(() => {
-    const handleClickOutside = () => setContextMenu(null);
-    window.addEventListener("click", handleClickOutside);
-    return () => window.removeEventListener("click", handleClickOutside);
+    const closeContext = () => setContextMenu(null);
+    window.addEventListener("click", closeContext);
+    return () => window.removeEventListener("click", closeContext);
   }, []);
 
   const handleChange = (rowIndex: number, key: string, value: string) => {
+    if (rowIndex >= data.length) {
+      const newRow = { ...extraRows[rowIndex - data.length], [key]: value };
+      const newData = [...data, ...extraRows];
+      newData[rowIndex] = newRow;
+      setData(newData.slice(0, rowIndex + 1));
+      return;
+    }
     const updated = [...data];
     updated[rowIndex][key] = value;
     setData(updated);
@@ -151,7 +150,7 @@ const Table: React.FC = () => {
     const newLabel = `Column ${columns.length - initialColumns.length + 1}`;
     setColumns([...columns, newKey]);
     setColumnHeadersMap({ ...columnHeadersMap, [newKey]: newLabel });
-    setData((prev) => prev.map((row) => ({ ...row, [newKey]: "" })));
+    setData(data.map((row) => ({ ...row, [newKey]: "" })));
   };
 
   const deleteRow = (index: number) => {
@@ -176,33 +175,20 @@ const Table: React.FC = () => {
     setColumnHeadersMap(newHeaders);
   };
 
-  const allRows = [
-    ...data,
-    ...Array(extraRows)
-      .fill({})
-      .map(() => {
-        const blank: Row = {};
-        columns.forEach((col) => (blank[col] = ""));
-        return blank;
-      }),
-  ];
+  const allRows = [...data, ...extraRows];
 
   return (
     <div className="p-4 w-full overflow-x-auto relative" ref={tableRef}>
       {/* Formula Bar */}
       <div className="flex items-center bg-gray-200 px-4 py-2 w-max min-w-full">
-        <div className="text-sm font-medium text-gray-700 mr-4">
+        <div className="text-sm font-medium text-gray-700 mr-4 w-[60px]">
           {selectedCell
-            ? `${String.fromCharCode(
-                65 + columns.indexOf(selectedCell.col)
-              )}${selectedCell.row + 1}`
+            ? `${String.fromCharCode(65 + columns.indexOf(selectedCell.col))}${selectedCell.row + 1}`
             : "—"}
         </div>
         <input
           type="text"
-          value={
-            selectedCell ? data[selectedCell.row]?.[selectedCell.col] ?? "" : ""
-          }
+          value={selectedCell ? allRows[selectedCell.row]?.[selectedCell.col] ?? "" : ""}
           readOnly
           className="w-full bg-white px-3 py-1 rounded border text-sm shadow-inner"
         />
@@ -217,12 +203,7 @@ const Table: React.FC = () => {
                 key={i}
                 onContextMenu={(e) => {
                   e.preventDefault();
-                  setContextMenu({
-                    x: e.clientX,
-                    y: e.clientY,
-                    type: "col",
-                    index: i,
-                  });
+                  setContextMenu({ x: e.clientX, y: e.clientY, type: "col", index: i });
                 }}
                 className="border border-gray-300 px-3 py-2 text-left font-semibold bg-gray-100"
               >
@@ -232,21 +213,14 @@ const Table: React.FC = () => {
                     className="w-full bg-transparent outline-none font-semibold"
                     value={columnHeadersMap[colKey]}
                     onChange={(e) =>
-                      setColumnHeadersMap({
-                        ...columnHeadersMap,
-                        [colKey]: e.target.value,
-                      })
+                      setColumnHeadersMap({ ...columnHeadersMap, [colKey]: e.target.value })
                     }
                   />
                 </div>
               </th>
             ))}
             <th className="border border-gray-300 w-10 text-center bg-white">
-              <button
-                onClick={addColumn}
-                className="text-blue-600 hover:text-blue-800"
-                title="Add column"
-              >
+              <button onClick={addColumn} className="text-blue-600 hover:text-blue-800" title="Add column">
                 <FaPlus />
               </button>
             </th>
@@ -268,28 +242,19 @@ const Table: React.FC = () => {
                 return (
                   <td
                     key={colIndex}
-                    onClick={() =>
-                      rowIndex < data.length &&
-                      setSelectedCell({ row: rowIndex, col: colKey })
-                    }
+                    onClick={() => setSelectedCell({ row: rowIndex, col: colKey })}
                     onContextMenu={(e) => {
                       e.preventDefault();
-                      if (rowIndex < data.length)
-                        setContextMenu({
-                          x: e.clientX,
-                          y: e.clientY,
-                          type: "row",
-                          index: rowIndex,
-                        });
+                      if (rowIndex < data.length) {
+                        setContextMenu({ x: e.clientX, y: e.clientY, type: "row", index: rowIndex });
+                      }
                     }}
                     className="border border-gray-300 p-2 align-top"
                   >
                     {isStatus ? (
                       <select
                         value={value}
-                        onChange={(e) =>
-                          handleChange(rowIndex, colKey, e.target.value)
-                        }
+                        onChange={(e) => handleChange(rowIndex, colKey, e.target.value)}
                         className={`w-full rounded px-2 py-1 text-sm ${statusColors[value]}`}
                       >
                         {statusOptions.map((opt) => (
@@ -300,9 +265,7 @@ const Table: React.FC = () => {
                       </select>
                     ) : isURL ? (
                       <a
-                        href={
-                          value.startsWith("http") ? value : `https://${value}`
-                        }
+                        href={value.startsWith("http") ? value : `https://${value}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 underline text-sm"
@@ -312,9 +275,7 @@ const Table: React.FC = () => {
                     ) : (
                       <textarea
                         value={value}
-                        onChange={(e) =>
-                          handleChange(rowIndex, colKey, e.target.value)
-                        }
+                        onChange={(e) => handleChange(rowIndex, colKey, e.target.value)}
                         className={`w-full resize-none outline-none bg-transparent text-sm ${
                           isPriority ? priorityColors[value] : ""
                         }`}
